@@ -5,6 +5,7 @@ from fastapi import FastAPI
 # Import AI Module
 from langchain_community.chat_models import ChatZhipuAI
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from pydantic import BaseModel
 
 import os
 
@@ -19,7 +20,25 @@ chat = ChatZhipuAI(
 
 app = FastAPI()
 
-userInput = "你好，我今天梦见我在一个很高的钟楼上，下面全部都是要追杀我的人，请问这代表什么意思"
+userInput = (
+    "你好，我今天梦见我在一个很高的钟楼上，下面全部都是要追杀我的人，请问这代表什么意思"
+)
+
+
+class RequestBody(BaseModel):
+    userInput: str
+
+
+@app.post("/query")
+def query(request: RequestBody):
+    messages = [
+        AIMessage(content="您好，请描述您做的梦"),
+        SystemMessage(content="你是一个周公解梦师。"),
+        HumanMessage(content=request.userInput),
+    ]
+    response = chat.invoke(messages)
+    return {"code": 200, "content": response.content}
+
 
 @app.get("/")
 def read_root():
@@ -33,12 +52,11 @@ def read_root():
         HumanMessage(content=userInput),
     ]
 
-
     response = chat.invoke(messages)
 
     print(response)
     # print(response.content)
-    return {'modelResponse': response.content.replace("\n", "")}
+    return {"modelResponse": response.content.replace("\n", "")}
 
 
 @app.get("/items/{item_id}")
