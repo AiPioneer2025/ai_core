@@ -11,28 +11,34 @@ import os
 os.environ["ZHIPUAI_API_KEY"] = "34492d269e80b980eceaba735b5b0071.de7koKvFNhCkqpOc"
 
 # Select Model
+# 如果需要不停的交互，需要在Model里使用Callback
 chat = ChatZhipuAI(
     model="glm-4",
     temperature=0.5,
 )
 
-# Prompt
-messages = [
-    AIMessage(content="您好，请描述您做的梦"),
-    SystemMessage(content="你是一个周公解梦师。"),
-    HumanMessage(content="我是一个男性，梦见自己生了一个男孩，请问一下这代表了什么？"),
-]
-
-
-
 app = FastAPI()
 
+userInput = "你好，我今天梦见我在一个很高的钟楼上，下面全部都是要追杀我的人，请问这代表什么意思"
 
 @app.get("/")
 def read_root():
+
+    # 对userInput做调整
+
+    # Prompt
+    messages = [
+        AIMessage(content="您好，请描述您做的梦"),
+        SystemMessage(content="你是一个周公解梦师。"),
+        HumanMessage(content=userInput),
+    ]
+
+
     response = chat.invoke(messages)
-    print(response.content)  # Displays the AI-generated poem
-    return response.content
+
+    print(response)
+    # print(response.content)
+    return {'modelResponse': response.content.replace("\n", "")}
 
 
 @app.get("/items/{item_id}")
