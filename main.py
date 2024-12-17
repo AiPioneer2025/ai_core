@@ -1,6 +1,6 @@
 from typing import Union
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 
 # Import AI Module
 from langchain_community.chat_models import ChatZhipuAI
@@ -20,6 +20,9 @@ chat = ChatZhipuAI(
 
 app = FastAPI()
 
+# 路由分组/ai_core/api
+router = APIRouter()
+app.include_router(router, prefix="/ai_core/api")
 userInput = (
     "你好，我今天梦见我在一个很高的钟楼上，下面全部都是要追杀我的人，请问这代表什么意思"
 )
@@ -29,7 +32,7 @@ class RequestBody(BaseModel):
     userInput: str
 
 
-@app.post("/query")
+@router.post("/query")
 def query(request: RequestBody):
     messages = [
         AIMessage(content="您好，请描述您做的梦"),
@@ -37,7 +40,7 @@ def query(request: RequestBody):
         HumanMessage(content=request.userInput),
     ]
     response = chat.invoke(messages)
-    return {"code": 200, "content": response.content}
+    return {"code": 200, "data": response.content, "msg": "success"}
 
 
 @app.get("/")
