@@ -4,7 +4,7 @@ from fastapi import FastAPI, APIRouter, Request
 
 # Import AI Module
 from langchain_community.chat_models import ChatZhipuAI
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, BaseMessage
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from starlette.responses import StreamingResponse
 from pydantic import BaseModel
@@ -69,7 +69,7 @@ async def query_stream(request: RequestBody):
     return {"code": 200, "data": StreamingResponse(generate_stream_response(callback, messages)), "msg": "success"}
     # , media_type="text/event-stream")
 
-async def generate_stream_response(_callback, messages: list[BaseMessage]):
+async def generate_stream_response(_callback, messages):
     """流式响应"""
     task = asyncio.create_task(zhipuai_chat.astream(messages))
     async for token in _callback.aiter():
