@@ -18,11 +18,9 @@ chat = ChatZhipuAI(
     temperature=0.5,
 )
 
-app = FastAPI()
-
 # 路由分组/ai_core/api
 router = APIRouter()
-app.include_router(router, prefix="/ai_core/api")
+
 userInput = (
     "你好，我今天梦见我在一个很高的钟楼上，下面全部都是要追杀我的人，请问这代表什么意思"
 )
@@ -42,7 +40,8 @@ def query(request: RequestBody):
     response = chat.invoke(messages)
     return {"code": 200, "data": response.content, "msg": "success"}
 
-
+app = FastAPI()
+app.include_router(router, prefix="/ai_core/api")
 @app.get("/")
 def read_root():
 
