@@ -63,7 +63,7 @@ async def query_stream(request: RequestBody):
         SystemMessage(content="你是一个周公解梦师。"),
         HumanMessage(content=request.userInput),
     ]
-    return StreamingResponse(generate_stream_response(callback, messages))
+    return {"code": 200, "data": StreamingResponse(generate_stream_response(callback, messages)), "msg": "success"}
     # , media_type="text/event-stream")
 
 async def generate_stream_response(_callback, messages: list[BaseMessage]):
