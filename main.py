@@ -56,19 +56,19 @@ def query(request: RequestBody):
 #         return {"code": 200, "data": full, "msg": "success"}
 
 @router.post("/query_stream")
-async def query_stream(req_model: request_model.Chat):
+async def query_stream(request: RequestBody):
     callback = AsyncIteratorCallbackHandler()
-    llm = ChatOpenAI(streaming=True, callbacks=[callback], temperature=0)
     messages = [
         AIMessage(content="您好，请描述您做的梦"),
         SystemMessage(content="你是一个周公解梦师。"),
         HumanMessage(content=request.userInput),
     ]
-    return StreamingResponse(generate_stream_response(callback, llm, messages), media_type="text/event-stream")
+    return StreamingResponse(generate_stream_response(callback, messages))
+    # , media_type="text/event-stream")
 
-async def generate_stream_response(_callback, llm: ChatOpenAI, messages: list[BaseMessage]):
+async def generate_stream_response(_callback, messages: list[BaseMessage]):
     """流式响应"""
-    task = asyncio.create_task(llm.apredict_messages(messages))
+    task = asyncio.create_task(zhipuai_chat.astream(messages))
     async for token in _callback.aiter():
         yield token
 
