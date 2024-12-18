@@ -40,6 +40,40 @@ def query(request: RequestBody):
     response = chat.invoke(messages)
     return {"code": 200, "data": response.content, "msg": "success"}
 
+# @router.post("/query_stream")
+# async def query_stream(request: RequestBody):
+#     messages = [
+#         AIMessage(content="您好，请描述您做的梦"),
+#         SystemMessage(content="你是一个周公解梦师。"),
+#         HumanMessage(content=request.userInput),
+#     ]
+#     # response = chat.stream(messages)
+#     full = ''
+#     # stream:
+#     async for chunk in zhipuai_chat.astream(messages):
+#         full += chunk
+#         print(full)
+#         return {"code": 200, "data": full, "msg": "success"}
+
+@router.post("/query_stream")
+async def query_stream(req_model: request_model.Chat):
+    callback = AsyncIteratorCallbackHandler()
+    llm = ChatOpenAI(streaming=True, callbacks=[callback], temperature=0)
+    messages = [
+        AIMessage(content="您好，请描述您做的梦"),
+        SystemMessage(content="你是一个周公解梦师。"),
+        HumanMessage(content=request.userInput),
+    ]
+    return StreamingResponse(generate_stream_response(callback, llm, messages), media_type="text/event-stream")
+
+async def generate_stream_response(_callback, llm: ChatOpenAI, messages: list[BaseMessage]):
+    """流式响应"""
+    task = asyncio.create_task(llm.apredict_messages(messages))
+    async for token in _callback.aiter():
+        yield token
+
+    await task
+
 app = FastAPI()
 app.include_router(router, prefix="/ai_core/api")
 @app.get("/")
@@ -61,6 +95,6 @@ def read_root():
     return {"modelResponse": response.content.replace("\n", "")}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+# @app.get("/items/{item_id}")
+# def read_item(item_id: int, q: Union[str, None] = None):
+#     return {"item_id": item_id, "q": q}
