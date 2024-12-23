@@ -54,24 +54,8 @@ def query(request: RequestBody):
     return {"code": 200, "data": response.content, "msg": "success"}
 
 
-# @router.post("/query_stream")
-# async def query_stream(request: RequestBody):
-#     messages = [
-#         AIMessage(content="您好，请描述您做的梦"),
-#         SystemMessage(content="你是一个周公解梦师。"),
-#         HumanMessage(content=request.userInput),
-#     ]
-#     # response = chat.stream(messages)
-#     full = ''
-#     # stream:
-#     async for chunk in zhipuai_chat.astream(messages):
-#         full += chunk
-#         print(full)
-#         return {"code": 200, "data": full, "msg": "success"}
-
-
-@router.post("/query_stream_test")
-async def query_stream_test(request: RequestBody):
+@router.post("/query_stream")
+async def query_stream(request: RequestBody):
     messages = [
         AIMessage(content="您好，请描述您做的梦"),
         SystemMessage(content="你是一个周公解梦师。"),
@@ -80,36 +64,16 @@ async def query_stream_test(request: RequestBody):
 
     # 创建一个流式响应
     async def generate_stream():
-        async for chunk in chat.astream(messages):
-            print(chunk.content, end="|", flush=True)
-            yield chunk.content.encode("utf-8")
+        print(messages)
+        try:
+            async for chunk in chat.astream(messages):
+                print(chunk.content, end="|", flush=True)
+                yield chunk.content.encode("utf-8")
+        except Exception as e:
+            print(f"Error occurred during streaming: {e}")
 
-    return StreamingResponse(generate_stream(), media_type="text/event-stream")
-
-
-# @router.post("/query_stream")
-# async def query_stream(request: RequestBody):
-#     callback = AsyncIteratorCallbackHandler()
-#     messages = [
-#         AIMessage(content="您好，请描述您做的梦"),
-#         SystemMessage(content="你是一个周公解梦师。"),
-#         HumanMessage(content=request.userInput),
-#     ]
-#     return {
-#         "code": 200,
-#         "data": StreamingResponse(generate_stream_response(callback, messages)),
-#         "msg": "success",
-#     }
-#     # , media_type="text/event-stream")
-
-
-# async def generate_stream_response(_callback, messages):
-#     """流式响应"""
-#     task = asyncio.create_task(zhipuai_chat.astream(messages))
-#     async for token in _callback.aiter():
-#         yield token
-
-#     await task
+    headers = {"Content-Type": "text/event-stream"}
+    return StreamingResponse(generate_stream(), headers=headers)
 
 
 app = FastAPI()
@@ -131,10 +95,4 @@ def read_root():
     response = chat.invoke(messages)
 
     print(response)
-    # print(response.content)
     return {"modelResponse": response.content.replace("\n", "")}
-
-
-# @app.get("/items/{item_id}")
-# def read_item(item_id: int, q: Union[str, None] = None):
-#     return {"item_id": item_id, "q": q}
